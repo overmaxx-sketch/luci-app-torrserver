@@ -1,20 +1,33 @@
-name: Build and Release TorrServer for OpenWrt
+name: Build minimal arm64 binary (static)
+        shell: bash
+        run: |
+          set -euxo pipefail
 
-on:
-  push:
-    tags:
-      - 'MatriX*'
-      - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Upstream ref to build: latest, tag, branch or commit SHA'
-        required: true
-        default: 'latest'
-      use_upx:
-        description: 'Also build UPX-compressed variant'
-        required: true
-        default: 'true'
+          cd upstream_src/server
+
+          export CGO_ENABLED=0
+          export GOOS=linux
+          export GOARCH=arm64
+
+          go build \
+            -trimpath \
+            -buildvcs=false \
+            -tags 'nosqlite' \
+            -ldflags='-s -w -extldflags "-static" -checklinkname=0 -buildid=' \
+            -o "../../${OUT_BIN}" \
+            ./cmd
+
+          cd ../..
+
+          strip --strip-unneeded "${OUT_BIN}" || true
+
+          cp -f "${OUT_BIN}" "${OUT_BIN_UPX}"
+          if [[ "${USE_UPX_INPUT}" == "true" ]]; then
+            upx --best --lzma "${OUT_BIN_UPX}" || true
+          fi
+
+          file "${OUT_BIN}"
+          ldd "${OUT_BIN}" || true
 
 jobs:
   release:
