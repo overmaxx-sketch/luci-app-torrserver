@@ -54,9 +54,10 @@ jobs:
                   | sed 's/\^{}//' \
                   | awk -F/ '{print $3}' \
                   | grep -E '^MatriX\.[0-9.]+$' \
-                  | sort -t. -k2,2n -k3,3n \
+                  | sort -V \
                   | tail -n 1)"
           fi
+
 
           if [[ -z "${REQUESTED_REF}" ]]; then
             echo "Unable to determine upstream ref"
