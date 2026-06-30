@@ -177,9 +177,9 @@ jobs:
             -trimpath \
             -buildvcs=false \
             -tags 'nosqlite' \
-            -ldflags "-s -w -extldflags '-static' -checklinkname=0 -buildid=" \
+            -ldflags "-s -w -extldflags '-static' -X main.Version=${DISPLAY_VERSION} -checklinkname=0 -buildid=" \
             -o "../../${OUT_BIN}" \
-            ./server/cmd
+            ./cmd
 
           cd ../..
 
