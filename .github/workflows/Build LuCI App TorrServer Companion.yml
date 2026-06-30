@@ -78,7 +78,53 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          # … (без изменений)
+
+          # Используем 'EOF' (одиночные кавычки) — переменные НЕ подставляются bash при генерации.
+          # Версия и имя пакета вставляются через envsubst после heredoc.
+          cat > packaging/postinstall.sh <<'SCRIPT_EOF'
+          #!/bin/sh
+          echo "============================================================"
+          echo " Installed PLACEHOLDER_PKG_NAME version PLACEHOLDER_PKG_VERSION"
+          echo " View: /www/luci-static/resources/view/torrserver/overview.js"
+          echo " Backend:    /usr/share/rpcd/ucode/torrserver"
+          echo " Menu:       /usr/share/luci/menu.d/luci-app-torrserver.json"
+          echo " ACL:        /usr/share/rpcd/acl.d/luci-app-torrserver.json"
+          echo " Expected daemon binary : /usr/bin/torrserver"
+          echo " Expected init script   : /etc/init.d/torrserver"
+          echo "============================================================"
+          [ -n "${IPKG_INSTROOT}" ] && exit 0
+          [ -n "${APK_INSTROOT}" ] && exit 0
+          /etc/init.d/rpcd reload  >/dev/null 2>&1 || true
+          /etc/init.d/uhttpd reload >/dev/null 2>&1 || true
+          [ ! -x /usr/bin/torrserver ]    && echo "[postinstall] warning: /usr/bin/torrserver not found"
+          [ ! -x /etc/init.d/torrserver ] && echo "[postinstall] warning: /etc/init.d/torrserver not found"
+          echo "[postinstall] done."
+          exit 0
+          SCRIPT_EOF
+
+          # Подставляем реальные значения через sed (не через bash-подстановку в heredoc)
+          sed -i \
+            -e "s/PLACEHOLDER_PKG_NAME/${PKG_NAME}/g" \
+            -e "s/PLACEHOLDER_PKG_VERSION/${PKG_VERSION}/g" \
+            packaging/postinstall.sh
+
+          cat > packaging/preremove.sh <<'EOF'
+          #!/bin/sh
+          [ -n "${IPKG_INSTROOT}" ] && exit 0
+          [ -n "${APK_INSTROOT}" ] && exit 0
+          /etc/init.d/rpcd reload  >/dev/null 2>&1 || true
+          /etc/init.d/uhttpd reload >/dev/null 2>&1 || true
+          echo "[preremove] done."
+          exit 0
+          EOF
+
+          cat > packaging/postremove.sh <<'EOF'
+          #!/bin/sh
+          echo "luci-app-torrserver removed. Daemon config preserved."
+          exit 0
+          EOF
+
+          chmod 0755 packaging/postinstall.sh packaging/preremove.sh packaging/postremove.sh
 
       - name: Build IPK and APK packages
         shell: bash
