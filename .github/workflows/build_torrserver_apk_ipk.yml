@@ -1,4 +1,4 @@
-- name: Build minimal arm64 binary (static)
+name: Build minimal arm64 binary (static)
         shell: bash
         run: |
           set -euxo pipefail
