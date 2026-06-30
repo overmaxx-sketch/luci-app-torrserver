@@ -51,11 +51,11 @@ jobs:
 
           if [[ -z "${REQUESTED_REF}" || "${REQUESTED_REF}" == "latest" ]]; then
             REQUESTED_REF="$(git ls-remote --refs --tags "${REPO_URL}" \
-                        | sed 's/\^{}//' \
-                        | awk -F/ '{print $3}' \
-                        | grep -E '^(MatriX\.[0-9.]+|v[0-9.]+)$' \
-                        | sort -V \
-                        | tail -n 1)"
+                  | sed 's/\^{}//' \
+                  | awk -F/ '{print $3}' \
+                  | grep -E '^MatriX\.[0-9.]+$' \
+                  | sort -t. -k2,2n -k3,3n \
+                  | tail -n 1)"
           fi
 
           if [[ -z "${REQUESTED_REF}" ]]; then
