@@ -179,7 +179,7 @@ jobs:
             -tags 'nosqlite' \
             -ldflags "-s -w -extldflags '-static' -checklinkname=0 -buildid=" \
             -o "../../${OUT_BIN}" \
-            ./cmd
+            ./server/cmd
 
           cd ../..
 
