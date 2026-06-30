@@ -84,7 +84,95 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          # … (без изменений)
+          export SOURCE_DATE_EPOCH=1704067200
+          export PKG_DESC="LuCI web interface for TorrServer on OpenWrt (ucode view, no CBI)"
+
+          cat > nfpm_ipk.yaml <<EOF
+          name: ${PKG_NAME}
+          arch: ${PKG_ARCH_IPK}
+          platform: linux
+          version: ${PKG_VERSION}
+          section: luci
+          priority: optional
+          maintainer: ${GITHUB_REPOSITORY_OWNER}
+          description: "${PKG_DESC}"
+          homepage: https://github.com/${GITHUB_REPOSITORY}
+          license: MIT
+          depends:
+            - luci-base
+            - rpcd
+          contents:
+            - src: ./root/usr/share/luci/menu.d/luci-app-torrserver.json
+              dst: /usr/share/luci/menu.d/luci-app-torrserver.json
+              file_info:
+                mode: 0644
+                mtime: 2024-01-01T00:00:00Z
+            - src: ./root/usr/share/rpcd/acl.d/luci-app-torrserver.json
+              dst: /usr/share/rpcd/acl.d/luci-app-torrserver.json
+              file_info:
+                mode: 0644
+                mtime: 2024-01-01T00:00:00Z
+            - src: ./root/www/luci-static/resources/view/torrserver/overview.js
+              dst: /www/luci-static/resources/view/torrserver/overview.js
+              file_info:
+                mode: 0644
+                mtime: 2024-01-01T00:00:00Z
+            - src: ./root/usr/share/rpcd/ucode/torrserver
+              dst: /usr/share/rpcd/ucode/torrserver
+              file_info:
+                mode: 0755
+                mtime: 2024-01-01T00:00:00Z
+          scripts:
+            postinstall: ./packaging/postinstall.sh
+            preremove:   ./packaging/preremove.sh
+            postremove:  ./packaging/postremove.sh
+          EOF
+
+          nfpm package --config nfpm_ipk.yaml --packager ipk \
+            --target "${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH_IPK}.ipk"
+          test -f "${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH_IPK}.ipk"
+
+          cat > nfpm_apk.yaml <<EOF
+          name: ${PKG_NAME}
+          arch: ${PKG_ARCH_APK}
+          platform: linux
+          version: ${PKG_VERSION}
+          section: luci
+          priority: optional
+          maintainer: ${GITHUB_REPOSITORY_OWNER}
+          description: "${PKG_DESC}"
+          homepage: https://github.com/${GITHUB_REPOSITORY}
+          license: MIT
+          depends:
+            - luci-base
+            - rpcd
+          contents:
+            - src: ./root/usr/share/luci/menu.d/luci-app-torrserver.json
+              dst: /usr/share/luci/menu.d/luci-app-torrserver.json
+              file_info:
+                mode: 0644
+            - src: ./root/usr/share/rpcd/acl.d/luci-app-torrserver.json
+              dst: /usr/share/rpcd/acl.d/luci-app-torrserver.json
+              file_info:
+                mode: 0644
+            - src: ./root/www/luci-static/resources/view/torrserver/overview.js
+              dst: /www/luci-static/resources/view/torrserver/overview.js
+              file_info:
+                mode: 0644
+            - src: ./root/usr/share/rpcd/ucode/torrserver
+              dst: /usr/share/rpcd/ucode/torrserver
+              file_info:
+                mode: 0755
+          scripts:
+            postinstall: ./packaging/postinstall.sh
+            preremove:   ./packaging/preremove.sh
+            postremove:  ./packaging/postremove.sh
+          EOF
+
+          nfpm package --config nfpm_apk.yaml --packager apk \
+            --target "${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH_APK}.apk"
+          test -f "${PKG_NAME}_${PKG_VERSION}_${PKG_ARCH_APK}.apk"
+
 
       - name: Generate checksums
         shell: bash
