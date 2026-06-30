@@ -1,4 +1,4 @@
-name: Build minimal arm64 binary (static)
+name: Build minimal arm64 binary
         shell: bash
         run: |
           set -euxo pipefail
@@ -13,7 +13,7 @@ name: Build minimal arm64 binary (static)
             -trimpath \
             -buildvcs=false \
             -tags 'nosqlite' \
-            -ldflags='-s -w -extldflags "-static" -checklinkname=0 -buildid=' \
+            -ldflags "-s -w -extldflags '-static' -checklinkname=0 -buildid=" \
             -o "../../${OUT_BIN}" \
             ./cmd
 
@@ -26,7 +26,9 @@ name: Build minimal arm64 binary (static)
             upx --best --lzma "${OUT_BIN_UPX}" || true
           fi
 
+          echo "=== FILE INFO ==="
           file "${OUT_BIN}"
+          echo "=== LDD ==="
           ldd "${OUT_BIN}" || true
 
 jobs:
